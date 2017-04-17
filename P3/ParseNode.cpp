@@ -7,6 +7,7 @@
 #include <vector>
 #include <regex>
 #include <string>
+#include <queue>
 #include "ParseNode.h"
 #include "polylex.h"
 
@@ -18,15 +19,22 @@ using namespace std;
 
 static bool pushedBack = false;
 static Token	pushedToken;
+static queue<Token> tokenQueue = queue<Token>();
 
 Token GetToken(istream& in) {
-    if(pushedBack){
-        pushedBack = false;
-        return pushedToken;
-    }else {
+    if(!tokenQueue.empty()){
+        Token &n = tokenQueue.front();
+        tokenQueue.pop();
+        return n;
+    } else {
         return getToken(in);
     }
 }
+
+void PutBackToken(Token& t) {
+    tokenQueue.push(t);
+}
+
 Token getToken(istream& in){
     enum State { START, INID, INSTRING, INICONST, INFCONST, INCOMMENT};
     
@@ -82,9 +90,11 @@ Token getToken(istream& in){
                     lexeme += ch;
                 }
                 else if( ch == '{' ) {
-                    return Token(LBR);
+                    return Token(LBR, "{");
                 } else if( ch == '}' ) {
-                    return Token(RBR);
+                    return Token(RBR, "}");
+                } else if (ch == ','){
+                    return Token(COMMA, ",");
                 }
                 else if( ch == '"' ) {
                     lexstate = INSTRING;
@@ -95,8 +105,7 @@ Token getToken(istream& in){
                         lexstate = INICONST;
                     }
                     else return Token(MINUS);
-                } 
-                else {
+                } else {
                     return Token(ERR,lexeme);
                 }
                 
@@ -110,7 +119,7 @@ Token getToken(istream& in){
                     } else if (lexeme == "print"){
                         return Token(PRINT, lexeme);
                     } else
-                    return Token(ID, lexeme);
+                        return Token(ID, lexeme);
                 }
                 lexeme += ch;
                 break;
@@ -137,6 +146,7 @@ Token getToken(istream& in){
                     else
                         return Token(ERR, lexeme);
                 } else if(ch == ','){
+                    
                     return Token(ICONST, lexeme);
                 }
                 else {
@@ -151,7 +161,6 @@ Token getToken(istream& in){
                     lexeme += ch;
                 }
                 else {
-                    in.putback(ch);
                     return Token(FCONST, lexeme);
                 }
                 
@@ -161,20 +170,19 @@ Token getToken(istream& in){
                 if( ch == '\n' ) {
                     currentLine++;
                     lexstate = START;
-                    return Token(NEWLINE);
                 }
                 break;
-
-            }
+                
         }
-        // handle getting DONE or ERR when not in start state
-        if(in.eof()){
-            if( lexstate == START ) return Token(DONE);
-            if( lexstate == INSTRING) return Token(DONE);
-            if( lexstate == INCOMMENT) return Token(DONE);
-        }
-        
-        return Token(ERR, lexeme);
+    }
+    // handle getting DONE or ERR when not in start state
+    if(in.eof()){
+        if( lexstate == START ) return Token(DONE);
+        if( lexstate == INSTRING) return Token(DONE);
+        if( lexstate == INCOMMENT) return Token(DONE);
+    }
+    
+    return Token(ERR, lexeme);
 }
 static ParseNode* GetOneCoeff(istream& in) {
     Token t = GetToken(in);
@@ -184,110 +192,108 @@ static ParseNode* GetOneCoeff(istream& in) {
     else if( t == FCONST ) {
         return new Fconst(std::stof(t.getLexeme()));
     }
-    else
+
         return 0;
 }
 
-void PutBackToken(Token& t) {
-	if( pushedBack ) {
-		cout << "You can only push back one token!" << endl;
-		exit(0);
-	}
-    
-	pushedBack = true;
-	pushedToken = t;
-}
+
 
 // handy function to print out errors
 void error(string s, int errType = 0) {
     if(errType == 0) cout << "PARSE ERROR: ";
     if(errType == 1) cout << "RUNTIME ERROR: ";
     cout << currentLine << " " << s << endl;
-	++globalErrorCount;
+    
+    ++globalErrorCount;
 }
 
 // Prog := Stmt | Stmt Prog
 ParseNode *Prog(istream& in) {
-	ParseNode *stmt = Stmt(in);
-
-	if( stmt != 0 )
-		return new StatementList(stmt, Prog(in));
-	return 0;
+    ParseNode *stmt = Stmt(in);
+    cout << "YA" <<endl;
+    
+    if( stmt != 0 )
+        return new StatementList(stmt, Prog(in));
+    
+    return 0;
 }
 
 // Stmt := Set ID Expr SC | PRINT Expr SC
 ParseNode *Stmt(istream& in) {
-	Token cmd = GetToken(in);
-
-	if( cmd == SET ) {
-		Token idTok = GetToken(in);
-		if( idTok != ID ) {
-			error("Identifier required after set");
-			return 0;
-		}
-		ParseNode *exp = Expr(in);
-		if( exp == 0 ) {
-			error("expression required after id in set");
-			return 0;
-		}
-		if( GetToken(in) != SC ) {
-			error("semicolon required");
-			return 0;
-		}
-
-		return new SetStatement(idTok.getLexeme(), exp);
-	}
-	else if( cmd == PRINT ) {
-		ParseNode *exp = Expr(in);
-		if( exp == 0 ) {
-			error("expression required after id in print");
-			return 0;
-		}
-		if( GetToken(in) != SC ) {
-			error("semicolon required");
-			return 0;
-		}
-
-		return new PrintStatement(exp);
-	}
-	else
-		PutBackToken(cmd);
-	return 0;
+    Token cmd = GetToken(in);
+    
+    if( cmd == SET ) {
+        Token idTok = GetToken(in);
+        if( idTok != ID ) {
+            error("Identifier required after set");
+            return 0;
+        }
+        ParseNode *exp = Expr(in);
+        if( exp == 0 ) {
+            error("expression required after id in set");
+            return 0;
+        }
+        if( GetToken(in) != SC ) {
+            error("semicolon required");
+            return 0;
+        }
+        
+        return new SetStatement(idTok.getLexeme(), exp);
+    }
+    else if( cmd == PRINT ) {
+        ParseNode *exp = Expr(in);
+        if( exp == 0 ) {
+            error("expression required after id in print");
+            return 0;
+        }
+        if( GetToken(in) != SC ) {
+            error("semicolon required");
+            return 0;
+        }
+        
+        return new PrintStatement(exp);
+    }
+    else
+        PutBackToken(cmd);
+    return 0;
 }
 
 ParseNode *Expr(istream& in) {
-	ParseNode *t1 = Term(in);
-	if( t1 == 0 )
-	return 0;
-	for(;;) {
-	Token op = GetToken(in);
-	if( op != PLUS && op != MINUS ) {
-        PutBackToken(op);
+    ParseNode *t1 = Term(in);
+    cout << endl << "HAY : " << t1 ;
+    if( t1 == 0 )
+        return 0;
+    for(;;) {
+        Token op = GetToken(in);
+        if(op == SC){
+            return t1;
+        }
+        if( op != PLUS && op != MINUS ) {
+            PutBackToken(op);
+            return t1;
+        }
+
+        ParseNode *t2 = Expr(in);
+        if( t2 == 0 ) {
+            error("expression required after + or - operator");
+            return 0;
+        }
+        // combine t1 and t2 together
+        if( op == PLUS )
+            t1 = new PlusOp(t1,t2);
+        else
+            t1 = new MinusOp(t1,t2);
+        
         return t1;
-	}
-	ParseNode *t2 = Expr(in);
-	if( t2 == 0 ) {
-		error("expression required after + or - operator");
-		return 0;
-	}
-	// combine t1 and t2 together
-	if( op == PLUS )
-		t1 = new PlusOp(t1,t2);
-	else
-		t1 = new MinusOp(t1,t2);
-	}
-	// should never get here...
-	return 0;
+    }
+    // should never get here...
+    return 0;
 }
 
 ParseNode *Term(istream& in) {
-    ParseNode *t1 = Primary(in);
-    if(t1 == 0){
-        error("primary type required after an ID");
-        return 0;
-    }
+//    ParseNode *t1 =
     
-    return t1 ;
+    return  Primary(in) ;
     
 }
 
@@ -295,29 +301,42 @@ ParseNode *Term(istream& in) {
 ParseNode *Primary(istream& in) {
     ParseNode *t1 = 0;
     Token tt1 = GetToken(in);
-    
-    switch(tt1.getType()){
-        case ICONST:
-            t1 = new Iconst(std::stoi(tt1.getLexeme()));
-            break;
-        case FCONST:
-            t1 = new Fconst(std::stof(tt1.getLexeme()));
-            break;
-        case STRING:
-            t1 = new Sconst(tt1.getLexeme());
-            break;
-        case LBR:
-            PutBackToken(tt1);
-            t1 = Poly(in);
-            break;
-        case ID:
-            PutBackToken(tt1);
-            t1 = Poly(in);
-            break;
-        default:
-            error("Expected Primary type");
+    Token tt2;
+    if(tt1 == ICONST){
+        t1 = new Iconst(std::stoi(tt1.getLexeme()));
+    }else if(tt1 == FCONST){
+        t1 = new Fconst(std::stof(tt1.getLexeme()));
+    }else if(tt1 == STRING){
+        t1 = new Sconst(tt1.getLexeme());
+    }else if(tt1 == LBR){
+        t1 = Poly(in);
+        tt2 = GetToken(in);
+        if(tt2 != RBR){
+            error("Curly braces don't match");
             return 0;
-            break;
+        } else {
+            return t1;
+        }
+    }else if(tt1 == LPAREN){
+        t1 = Expr(in);
+        tt2 = GetToken(in);
+        if(tt2 != RPAREN){
+            error("Parenthesis don't match");
+            return 0;
+        }
+    }else if(tt1 == LSQ){
+        t1 = Expr(in);
+        tt2 = GetToken(in);
+        if(tt2 != RSQ){
+            error("Square braces don't match");
+            return 0;
+        }
+    }else if (tt1 == SC){
+        cout << endl << "SC" << endl;
+        return t1;
+    }else if (tt1 == NEWLINE){
+        cout << endl << "NEWLINE" << endl;
+        return t1;
     }
 
     return t1;
@@ -325,36 +344,40 @@ ParseNode *Primary(istream& in) {
 
 // Poly := LCURLY Coeffs RCURLY { EvalAt } | ID { EvalAt }
 ParseNode *Poly(istream& in) {
-	// note EvalAt is optional
+    // note EvalAt is optional
     
     ParseNode *coeffs = 0;
     EvaluateAt *a = 0;
     
     Token initToke = GetToken(in);
-    Token nextToke = GetToken(in);
+    Token nextToke;
     
     
-    if(initToke == ID){
-        if(nextToke == LSQ){
-            PutBackToken(nextToke);
-            a = new EvaluateAt(new Ident(initToke.getLexeme()), EvalAt(in));
-            return a;
+//    if(initToke == ID){
+//        cout << "\n WENT ID \n";
+//        nextToke = GetToken(in);
+//        if(nextToke == LSQ){
+//            PutBackToken(nextToke);
+//            a = new EvaluateAt(new Ident(initToke.getLexeme()), EvalAt(in));
+//            return a;
+//        }
+//    }
+    
+        if(initToke == ICONST || initToke == FCONST) {
+            coeffs = Coeffs(in);
+            if(coeffs == 0){
+                error("No coefficients were specified between brackets");
+                return 0;
+            }
+            nextToke = GetToken(in);
+            if(nextToke == RBR){
+                PutBackToken(nextToke);
+                a = new EvaluateAt(coeffs, EvalAt(in));
+                return a;
+            }
         }
-    } else if(initToke == LBR){
-        coeffs = Coeffs(in);
-        if(coeffs == 0){
-            error("No coefficients were specified between brackets");
-            return 0;
-        }
-        if(nextToke == LSQ){
-            PutBackToken(nextToke);
-            a = new EvaluateAt(coeffs, EvalAt(in));
-            return a;
-        }
-        
-    }
-
-	return 0;
+    
+    return 0;
 }
 
 // notice we don't need a separate rule for ICONST | FCONST
@@ -362,6 +385,7 @@ ParseNode *Poly(istream& in) {
 ParseNode *Coeffs(istream& in) {
     std::vector<ParseNode *> coeffs;
     ParseNode *p = GetOneCoeff(in);
+    
     if( p == 0 )
         return 0;
     coeffs.push_back(p);
@@ -370,6 +394,10 @@ ParseNode *Coeffs(istream& in) {
         if( t != COMMA ) {
             PutBackToken(t);
             break;
+        }
+        if ( t == RBR){
+            PutBackToken(t);
+            return new Coefficients(coeffs);
         }
         p = GetOneCoeff(in);
         if( p == 0 ) {
@@ -380,24 +408,24 @@ ParseNode *Coeffs(istream& in) {
     }
     return new Coefficients(coeffs); // Coefficients class must take vector
 }
+
 // To evauluate the polynomials
 ParseNode *EvalAt(istream& in) {
-    
     ParseNode *p1 = 0;
     Token tok1 = GetToken(in);
+    Token tok2;
     
     if(tok1==LSQ){
         p1 = Expr(in);
+        tok2 = GetToken(in);
+        if(tok2 == RSQ){
+            return p1;
+        } else {
+            error("No closing square bracket");
+            return 0;
+        }
+
     }
     
-    Token tok2 = GetToken(in);
-
-    if(tok2 == RSQ){
-        return p1;
-    }
-    else {
-        error("No closing square bracket");
-        return 0;
-    }
-	return 0;
+    return 0;
 }

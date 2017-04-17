@@ -99,9 +99,6 @@ public:
 class Coefficients : public ParseNode {
     vector<ParseNode *> coefficients;
 public:
-    Coefficients(ParseNode *l, ParseNode *r, vector<ParseNode *> &coeff) : ParseNode(l, r){
-        coefficients = coeff;
-    }
     Coefficients(vector<ParseNode *> &coeff) : ParseNode(){
         coefficients = coeff;
     }
@@ -144,7 +141,7 @@ class Ident : public ParseNode {
 	string	id;
 public:
 	Ident(string id) : id(id), ParseNode() {}
-    Type GetType() { return UNKNOWNVAL; }; // not known until run time!
+    Type GetType() { return STRINGVAL; }; // not known until run time!
 };
 
 extern ParseNode *Prog(istream& in);

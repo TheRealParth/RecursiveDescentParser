@@ -29,7 +29,14 @@
 		B208649A1EA44F0200B1BD9A /* ParseNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParseNode.h; sourceTree = "<group>"; };
 		B208649B1EA44F0200B1BD9A /* polylex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = polylex.h; sourceTree = "<group>"; };
 		B20864A11EA4513D00B1BD9A /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		B20864A31EA48E5B00B1BD9A /* test.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.txt; sourceTree = "<group>"; };
+		B20864AE1EA4F09700B1BD9A /* prog1.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prog1.txt; sourceTree = "<group>"; };
+		B20864AF1EA4F09700B1BD9A /* prog2.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prog2.txt; sourceTree = "<group>"; };
+		B20864B01EA4F09700B1BD9A /* prog3.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prog3.txt; sourceTree = "<group>"; };
+		B20864B11EA4F09700B1BD9A /* prog4.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prog4.txt; sourceTree = "<group>"; };
+		B20864B21EA4F09700B1BD9A /* prog5.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prog5.txt; sourceTree = "<group>"; };
+		B20864B31EA4F09700B1BD9A /* test2.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test2.txt; sourceTree = "<group>"; };
+		B20864B41EA4F09700B1BD9A /* test3.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test3.txt; sourceTree = "<group>"; };
+		B20864B51EA4F09700B1BD9A /* test4.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test4.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,13 +69,28 @@
 		B20864911EA44EAE00B1BD9A /* P3 */ = {
 			isa = PBXGroup;
 			children = (
-				B20864A31EA48E5B00B1BD9A /* test.txt */,
+				B20864AD1EA4F07600B1BD9A /* tests */,
 				B20864A11EA4513D00B1BD9A /* main.cpp */,
 				B20864991EA44F0200B1BD9A /* ParseNode.cpp */,
 				B208649A1EA44F0200B1BD9A /* ParseNode.h */,
 				B208649B1EA44F0200B1BD9A /* polylex.h */,
 			);
 			path = P3;
+			sourceTree = "<group>";
+		};
+		B20864AD1EA4F07600B1BD9A /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				B20864AE1EA4F09700B1BD9A /* prog1.txt */,
+				B20864AF1EA4F09700B1BD9A /* prog2.txt */,
+				B20864B01EA4F09700B1BD9A /* prog3.txt */,
+				B20864B11EA4F09700B1BD9A /* prog4.txt */,
+				B20864B21EA4F09700B1BD9A /* prog5.txt */,
+				B20864B31EA4F09700B1BD9A /* test2.txt */,
+				B20864B41EA4F09700B1BD9A /* test3.txt */,
+				B20864B51EA4F09700B1BD9A /* test4.txt */,
+			);
+			name = tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

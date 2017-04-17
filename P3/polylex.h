@@ -33,9 +33,9 @@ enum TokenTypes {
 	LPAREN,
 	RPAREN,
 	SC,
-	ERR,
     NEWLINE,
-	DONE
+	DONE,
+    ERR,
 };
 
 class Token {
@@ -49,6 +49,7 @@ public:
 		this->t = t;
 		this->lexeme = lexeme;
 		this->line = currentLine;
+        cout << "NEW TOKEN : " << currentLine << "| LEX: " << lexeme <<  "| TYPE: " << TokenTypes(t) << "      "<< endl;
 	}
 
 	TokenTypes getType() const { return t; }
