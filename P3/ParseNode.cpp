@@ -111,7 +111,6 @@ Token getToken(istream& in){
                 
             case INSTRING:
                 if( ch == '"' ) {
-                    lexeme += ch;
                     return Token(STRING, lexeme);
                 }
                 else if( ch == '\n' ) {
@@ -194,8 +193,10 @@ void PutBackToken(Token& t) {
 }
 
 // handy function to print out errors
-void error(string s) {
-	cout << "PARSE ERROR: " << currentLine << " " << s << endl;
+void error(string s, int errType = 0) {
+    if(errType == 0) cout << "PARSE ERROR: ";
+    if(errType == 1) cout << "RUNTIME ERROR: ";
+    cout << currentLine << " " << s << endl;
 	++globalErrorCount;
 }
 
@@ -266,7 +267,7 @@ ParseNode *Expr(istream& in) {
 	// combine t1 and t2 together
 	if( op == PLUS )
 		t1 = new PlusOp(t1,t2);
-	else
+	else if (op == MINUS)
 		t1 = new MinusOp(t1,t2);
 	}
 	// should never get here...

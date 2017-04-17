@@ -40,11 +40,11 @@ main(int argc, char *argv[])
 
 	istream& in = use_stdin ? cin : file;
 
-    Token tok;
-    int allTokens = 0;
-    
-    map<TokenTypes,int> tokenCounts;
-    map<string,bool> identSeen;
+//    Token tok;
+//    int allTokens = 0;
+//    
+//    map<TokenTypes,int> tokenCounts;
+//    map<string,bool> identSeen;
     
 //    while( (tok = getToken(in)) != DONE && tok != ERR ) {
 //        allTokens++;
