@@ -94,6 +94,7 @@ public:
 	TimesOp(ParseNode *l, ParseNode *r) : ParseNode(l,r) {}
 };
 
+
 // a representation of a list of coefficients must be developed
 class Coefficients : public ParseNode {
     vector<ParseNode *> coefficients;
@@ -103,6 +104,14 @@ public:
     }
     Coefficients(vector<ParseNode *> &coeff) : ParseNode(){
         coefficients = coeff;
+    }
+};
+
+// represents evaluating a polynomial
+class EvaluateAt : public ParseNode {
+public:
+    EvaluateAt(ParseNode *idorcoeff, ParseNode *index) : ParseNode(idorcoeff,index) {
+        
     }
 };
 
@@ -135,7 +144,7 @@ class Ident : public ParseNode {
 	string	id;
 public:
 	Ident(string id) : id(id), ParseNode() {}
-	Type GetType(); // not known until run time!
+    Type GetType() { return UNKNOWNVAL; }; // not known until run time!
 };
 
 extern ParseNode *Prog(istream& in);

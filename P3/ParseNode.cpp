@@ -6,8 +6,10 @@
  */
 #include <vector>
 #include <regex>
+#include <string>
 #include "ParseNode.h"
 #include "polylex.h"
+
 
 using namespace std;
 // We want to use our getToken routine unchanged... BUT we want to have the ability
@@ -18,8 +20,12 @@ static bool pushedBack = false;
 static Token	pushedToken;
 
 Token GetToken(istream& in) {
-    
-	return getToken(in);
+    if(pushedBack){
+        pushedBack = false;
+        return pushedToken;
+    }else {
+        return getToken(in);
+    }
 }
 Token getToken(istream& in){
     enum State { START, INID, INSTRING, INICONST, INFCONST, INCOMMENT};
@@ -187,7 +193,7 @@ void PutBackToken(Token& t) {
 		cout << "You can only push back one token!" << endl;
 		exit(0);
 	}
-
+    
 	pushedBack = true;
 	pushedToken = t;
 }
@@ -256,8 +262,8 @@ ParseNode *Expr(istream& in) {
 	for(;;) {
 	Token op = GetToken(in);
 	if( op != PLUS && op != MINUS ) {
-	PutBackToken(op);
-	return t1;
+        PutBackToken(op);
+        return t1;
 	}
 	ParseNode *t2 = Expr(in);
 	if( t2 == 0 ) {
@@ -267,7 +273,7 @@ ParseNode *Expr(istream& in) {
 	// combine t1 and t2 together
 	if( op == PLUS )
 		t1 = new PlusOp(t1,t2);
-	else if (op == MINUS)
+	else
 		t1 = new MinusOp(t1,t2);
 	}
 	// should never get here...
@@ -275,18 +281,79 @@ ParseNode *Expr(istream& in) {
 }
 
 ParseNode *Term(istream& in) {
-	return 0;
+    ParseNode *t1 = Primary(in);
+    if(t1 == 0){
+        error("primary type required after an ID");
+        return 0;
+    }
+    
+    return t1 ;
+    
 }
 
 // Primary :=  ICONST | FCONST | STRING | ( Expr ) | Poly
 ParseNode *Primary(istream& in) {
-	// check tokens... or call Poly
-	return 0;
+    ParseNode *t1 = 0;
+    Token tt1 = GetToken(in);
+    
+    switch(tt1.getType()){
+        case ICONST:
+            t1 = new Iconst(std::stoi(tt1.getLexeme()));
+            break;
+        case FCONST:
+            t1 = new Fconst(std::stof(tt1.getLexeme()));
+            break;
+        case STRING:
+            t1 = new Sconst(tt1.getLexeme());
+            break;
+        case LBR:
+            PutBackToken(tt1);
+            t1 = Poly(in);
+            break;
+        case ID:
+            PutBackToken(tt1);
+            t1 = Poly(in);
+            break;
+        default:
+            error("Expected Primary type");
+            return 0;
+            break;
+    }
+
+    return t1;
 }
 
 // Poly := LCURLY Coeffs RCURLY { EvalAt } | ID { EvalAt }
 ParseNode *Poly(istream& in) {
 	// note EvalAt is optional
+    
+    ParseNode *coeffs = 0;
+    EvaluateAt *a = 0;
+    
+    Token initToke = GetToken(in);
+    Token nextToke = GetToken(in);
+    
+    
+    if(initToke == ID){
+        if(nextToke == LSQ){
+            PutBackToken(nextToke);
+            a = new EvaluateAt(new Ident(initToke.getLexeme()), EvalAt(in));
+            return a;
+        }
+    } else if(initToke == LBR){
+        coeffs = Coeffs(in);
+        if(coeffs == 0){
+            error("No coefficients were specified between brackets");
+            return 0;
+        }
+        if(nextToke == LSQ){
+            PutBackToken(nextToke);
+            a = new EvaluateAt(coeffs, EvalAt(in));
+            return a;
+        }
+        
+    }
+
 	return 0;
 }
 
@@ -313,7 +380,24 @@ ParseNode *Coeffs(istream& in) {
     }
     return new Coefficients(coeffs); // Coefficients class must take vector
 }
-
+// To evauluate the polynomials
 ParseNode *EvalAt(istream& in) {
+    
+    ParseNode *p1 = 0;
+    Token tok1 = GetToken(in);
+    
+    if(tok1==LSQ){
+        p1 = Expr(in);
+    }
+    
+    Token tok2 = GetToken(in);
+
+    if(tok2 == RSQ){
+        return p1;
+    }
+    else {
+        error("No closing square bracket");
+        return 0;
+    }
 	return 0;
 }

@@ -1,1 +1,2 @@
-set f { 1, 2, 4 };
+set f 1+2;
+asdfasdfasdf lajsdklfja;

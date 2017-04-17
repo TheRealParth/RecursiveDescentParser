@@ -45,7 +45,7 @@ main(int argc, char *argv[])
 //    
 //    map<TokenTypes,int> tokenCounts;
 //    map<string,bool> identSeen;
-    
+//    
 //    while( (tok = getToken(in)) != DONE && tok != ERR ) {
 //        allTokens++;
 //        tokenCounts[ tok.getType() ]++;

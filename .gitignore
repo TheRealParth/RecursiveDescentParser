@@ -1,32 +1,33 @@
 # Prerequisites
-p3/*.d
+./P3/*.d
 
 # Compiled Object files
-p3/*.slo
-p3/*.lo
-p3/*.o
-p3/*.obj
+./P3/*.slo
+./P3/*.lo
+./P3/*.o
+./P3/*.obj
 
 # Precompiled Headers
-p3/*.gch
-p3/*.pch
+./P3/*.gch
+./P3/*.pch
 
 # Compiled Dynamic libraries
-p3/*.so
-p3/*.dylib
-p3/*.dll
+./P3/*.so
+./P3/*.dylib
+./P3/*.dll
 
 # Fortran module files
-p3/*.mod
-p3/*.smod
+./P3/*.mod
+./P3/*.smod
 
 # Compiled Static libraries
-p3/*.lai
-p3/*.la
-p3/*.a
-p3/*.lib
+./P3/*.lai
+./P3/*.la
+./P3/*.a
+./P3/*.lib
 
 # Executables
-p3/*.exe
-p3/*.out
-p3/*.app
+./P3/*.exe
+./P3/*.out
+./P3/*.app
+./P3/main
