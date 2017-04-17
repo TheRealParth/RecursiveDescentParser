@@ -69,6 +69,12 @@ main(int argc, char *argv[])
         return 1;
     }
     
+//    ParseNode *right = program->rightNode();
+//    cout << "\n" << right << "\n";
+//    right = program->rightNode();
+//    cout << "\n" << right;
+
+    
     return 0;
 }
 

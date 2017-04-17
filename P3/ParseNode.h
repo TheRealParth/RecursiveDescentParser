@@ -53,8 +53,16 @@ class ParseNode {
 public:
 	ParseNode(ParseNode *left = 0, ParseNode *right = 0) : left(left), right(right) {}
 	virtual ~ParseNode() {}
-
 	virtual Type GetType() { return UNKNOWNVAL; }
+    
+    ParseNode *rightNode() {
+        return right;
+    };
+    ParseNode *leftNode() {
+        return left;
+    };
+
+    
 };
 
 // a list of statements is represented by a statement to the left, and a list of statments to the right
