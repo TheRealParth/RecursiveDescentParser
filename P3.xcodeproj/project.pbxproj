@@ -37,6 +37,7 @@
 		B20864B31EA4F09700B1BD9A /* test2.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test2.txt; sourceTree = "<group>"; };
 		B20864B41EA4F09700B1BD9A /* test3.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test3.txt; sourceTree = "<group>"; };
 		B20864B51EA4F09700B1BD9A /* test4.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test4.txt; sourceTree = "<group>"; };
+		B2C516D41EAAF8D900A62962 /* test.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +90,7 @@
 				B20864B31EA4F09700B1BD9A /* test2.txt */,
 				B20864B41EA4F09700B1BD9A /* test3.txt */,
 				B20864B51EA4F09700B1BD9A /* test4.txt */,
+				B2C516D41EAAF8D900A62962 /* test.txt */,
 			);
 			name = tests;
 			sourceTree = "<group>";

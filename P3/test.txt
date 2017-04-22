@@ -1,0 +1,4 @@
+set x 2 + 2;
+print y;  # this should parse but fail semantic tests later
+set x
+print x;

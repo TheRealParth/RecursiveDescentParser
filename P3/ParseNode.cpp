@@ -8,6 +8,7 @@
 #include <regex>
 #include <string>
 #include <stack>
+
 #include "ParseNode.h"
 #include "polylex.h"
 
@@ -17,7 +18,6 @@ using namespace std;
 // to push back a token if we read one too many; this is our "lookahead"
 // so we implement a "wrapper" around getToken
 
-static bool pushedBack = false;
 static stack<Token> tokenQueue = stack<Token>();
 
 Token GetToken(istream& in) {
@@ -54,12 +54,12 @@ Token getToken(istream& in){
         if( in.eof() || in.bad() )
             break;
         
-        if( ch == '\n'  ) {
+        if( ch == '\n' ) {
             currentLine++;
             lexstate = START;
             continue;
         }
-    
+        
         if(isspace(ch) && (lexstate == START)) continue;
         switch( lexstate ) {
             case START:
@@ -139,10 +139,19 @@ Token getToken(istream& in){
                 if( isdigit(ch) ) {
                     lexeme += ch;
                     continue;
+                } else if(ch == '.'){
+                    lexeme += ch;
+                    if(isdigit(in.peek())){
+                        lexstate = INFCONST;
+                        continue;
+                    } else {
+                        error("Invalid float.");
+                        return Token(ERR, lexeme);
+                    }
                 } else {
                     in.putback(ch);
                     if(lexeme.length())
-                    return Token(ICONST, lexeme);
+                        return Token(ICONST, lexeme);
                 }
                 break;
                 
@@ -153,7 +162,7 @@ Token getToken(istream& in){
                 } else {
                     in.putback(ch);
                     if(lexeme.length())
-                    return Token(FCONST, lexeme);
+                        return Token(FCONST, lexeme);
                 }
                 break;
                 
@@ -164,7 +173,6 @@ Token getToken(istream& in){
                 }
                 continue;
                 break;
-                
         }
     }
     // handle getting DONE or ERR when not in start state
@@ -181,17 +189,16 @@ Token getToken(istream& in){
 // Prog := Stmt | Stmt Prog
 ParseNode *Prog(istream& in) {
     ParseNode *stmt = Stmt(in);
-
+    
     if( stmt != 0 )
         return new StatementList(stmt, Prog(in));
-    
+//    error("Invalid Statement");
     return 0;
 }
 
 // Stmt := Set ID Expr SC | PRINT Expr SC
 ParseNode *Stmt(istream& in) {
     Token cmd = GetToken(in);
-    
     if( cmd == SET ) {
         Token idTok = GetToken(in);
         if( idTok != ID ) {
@@ -223,11 +230,10 @@ ParseNode *Stmt(istream& in) {
         
         return new PrintStatement(exp);
     }
-    else
-        PutBackToken(cmd);
     return 0;
 }
 
+// Expr := Term { (+|-) Expr }
 ParseNode *Expr(istream& in) {
     ParseNode *t1 = Term(in);
     
@@ -256,14 +262,13 @@ ParseNode *Expr(istream& in) {
     return t1;
     
 }
-
+// Term := Primary { * Primary }
 ParseNode *Term(istream& in) {
     ParseNode *p = Primary(in);
     Token j = GetToken(in);
     if(j == STAR){
         return new TimesOp(p, Term(in));
     }
-    
     PutBackToken(j);
     return p;
 }
@@ -273,35 +278,22 @@ ParseNode *Primary(istream& in) {
     ParseNode *t1 = 0;
     Token tt1 = GetToken(in);
     Token tt2;
+    
     if(tt1 == ICONST){
-        cout << "1738 : " << tt1.getLexeme() << endl;
-        t1 = new Iconst(std::stoi(tt1.getLexeme()));
+        t1 = new Iconst(stoi(tt1.getLexeme()));
     }else if(tt1 == FCONST){
-        t1 = new Fconst(std::stof(tt1.getLexeme()));
+        t1 = new Fconst(stof(tt1.getLexeme()));
     }else if(tt1 == STRING){
         t1 = new Sconst(tt1.getLexeme());
     }else if(tt1 == LBR){
+        PutBackToken(tt1);
         t1 = Poly(in);
-        tt2 = GetToken(in);
-        if(tt2 != RBR){
-            error("Curly braces don't match");
-            
-            return 0;
-        } else {
-            return t1;
-        }
+        
     }else if(tt1 == LPAREN){
         t1 = Expr(in);
         tt2 = GetToken(in);
         if(tt2 != RPAREN){
             error("Parenthesis don't match");
-            return 0;
-        }
-    }else if(tt1 == LSQ){
-        t1 = Expr(in);
-        tt2 = GetToken(in);
-        if(tt2 != RSQ){
-            error("Square braces don't match");
             return 0;
         }
     }
@@ -311,15 +303,35 @@ ParseNode *Primary(istream& in) {
 // Poly := LCURLY Coeffs RCURLY { EvalAt } | ID { EvalAt }
 ParseNode *Poly(istream& in) {
     // note EvalAt is optional
-    
-    ParseNode *coeffs = 0;
-    coeffs = Coeffs(in);
-    
-    if(coeffs == 0){
-        error("No coefficients were specified between brackets");
+    Token tk = GetToken(in);
+    if(tk == LBR){
+        ParseNode *coeffs = 0;
+        coeffs = Coeffs(in);
+        Token tk2 = GetToken(in);
+        if(coeffs == 0){
+            error("No coefficients were specified between brackets");
+            return 0;
+        }
+        if(tk2 == RBR){
+            Token tk2 = GetToken(in);
+            if(tk2 == LSQ){
+                PutBackToken(tk2);
+                return new EvaluateAt(coeffs, EvalAt(in));
+            } else {
+                PutBackToken(tk2);
+                return coeffs;
+            }
+            return 0;
+            
+        }
+        
         return 0;
+        
+    } else if (tk == LSQ){
+        PutBackToken(tk);
+        return EvalAt(in);
     }
-    return new EvaluateAt(coeffs, EvalAt(in));
+    return 0;
 }
 ParseNode *GetOneCoeff(Token& t){
     if( t == ICONST ) {
@@ -338,19 +350,19 @@ ParseNode *Coeffs(istream& in) {
     
     if (t == COMMA) {
         error("No value provided before comma");
+        return 0;
     }
-    
     ParseNode *p = GetOneCoeff(t);
-//    cout << " TOKEN TYPE : " << t.getType() << " |   TOKEN LEXEME: " << t.getLexeme() << endl;
     if( p == 0 )
         return 0;
-
+    
     coeffs.push_back(p);
     
     while( true ) {
         t = GetToken(in);
         
         if( t == COMMA ) {
+            
             continue;
         } else if ( t == RBR){
             PutBackToken(t);
@@ -369,18 +381,18 @@ ParseNode *Coeffs(istream& in) {
 
 // To evauluate the polynomials
 ParseNode *EvalAt(istream& in) {
-    ParseNode *p1 = 0;
-    Token tok1 = GetToken(in);
-    Token tok2;
-    if(tok1==LSQ){
-        p1 = Expr(in);
-        tok2 = GetToken(in);
-        if(tok2 == RSQ){
-            return p1;
-        } else {
-            error("No closing square bracket");
+    Token tk = GetToken(in);
+    if(tk == SC){
+        PutBackToken(tk);
+        return 0;
+    } else if(tk == LSQ){
+        ParseNode *n = Expr(in);
+        Token tk2 = GetToken(in);
+        if(tk2 != RSQ){
+            error("Square braces don't match");
             return 0;
         }
+        return n;
     }
     
     return 0;
