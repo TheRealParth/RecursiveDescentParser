@@ -10,15 +10,18 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 
 using std::istream;
 using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using std::map;
 #include "polylex.h"
 
 extern int globalErrorCount;
+
 
 // objects in the language have one of these types
 enum Type {
@@ -27,6 +30,7 @@ enum Type {
 	STRINGVAL,
 	UNKNOWNVAL,
 };
+
 
 // this class will be used in the future to hold results of evaluations
 class Value {
@@ -55,6 +59,12 @@ public:
 	virtual ~ParseNode() {}
 	virtual Type GetType() { return UNKNOWNVAL; }
     
+    virtual void RunStaticChecks(map<string,bool>& idMap) {
+        if( left )
+            left->RunStaticChecks(idMap);
+        if( right )
+            right->RunStaticChecks(idMap);
+    }
     ParseNode *rightNode() {
         return right;
     };
@@ -65,6 +75,7 @@ public:
 
     
 };
+extern void runtimeError(ParseNode* i, string s);
 
 // a list of statements is represented by a statement to the left, and a list of statments to the right
 class StatementList : public ParseNode {
@@ -77,6 +88,10 @@ class SetStatement : public ParseNode {
 	string id;
 public:
 	SetStatement(string id, ParseNode* exp) : id(id), ParseNode(exp) {}
+    void RunStaticChecks(map<string,bool>& idMap)
+    {
+        idMap[id] = true;
+    }
 };
 
 // a PrintStatement represents the idea of printing the value of the Expr pointed to by the left node
@@ -150,8 +165,15 @@ class Ident : public ParseNode {
 	string	id;
 public:
 	Ident(string id) : id(id), ParseNode() {}
+    void RunStaticChecks(map<string,bool>& idMap) {
+        if( idMap[id] == false ) {
+            runtimeError(this, "identifier " + id + " used before set");
+        }
+    }
     Type GetType() { return UNKNOWNVAL; }; // not known until run time!
 };
+
+
 
 extern ParseNode *Prog(istream& in);
 extern ParseNode *Stmt(istream& in);
@@ -161,5 +183,6 @@ extern ParseNode *Primary(istream& in);
 extern ParseNode *Poly(istream& in);
 extern ParseNode *Coeffs(istream& in);
 extern ParseNode *EvalAt(istream& in);
+
 
 #endif /* PARSENODE_H_ */
