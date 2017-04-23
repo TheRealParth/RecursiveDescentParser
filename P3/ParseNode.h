@@ -58,6 +58,7 @@ public:
     ParseNode *rightNode() {
         return right;
     };
+    
     ParseNode *leftNode() {
         return left;
     };
@@ -149,7 +150,7 @@ class Ident : public ParseNode {
 	string	id;
 public:
 	Ident(string id) : id(id), ParseNode() {}
-    Type GetType() { return STRINGVAL; }; // not known until run time!
+    Type GetType() { return UNKNOWNVAL; }; // not known until run time!
 };
 
 extern ParseNode *Prog(istream& in);

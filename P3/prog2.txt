@@ -1,5 +1,2 @@
-set f { 2,0,0,1 };  # 2x^3 + 1
-set g { 1,0, 0 }; # x^2
-set x 2;
 set gofx g[x];   ## should be 4  (2^2)
 set fofgofx f[ gofx ];  ### should be  129

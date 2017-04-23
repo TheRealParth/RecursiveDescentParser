@@ -8,16 +8,14 @@
 #include <regex>
 #include <string>
 #include <stack>
+#include <map>
 
 #include "ParseNode.h"
 #include "polylex.h"
 
-
 using namespace std;
-// We want to use our getToken routine unchanged... BUT we want to have the ability
-// to push back a token if we read one too many; this is our "lookahead"
-// so we implement a "wrapper" around getToken
 
+map<string,bool> IdentifierMap;
 static stack<Token> tokenQueue = stack<Token>();
 
 Token GetToken(istream& in) {
@@ -244,8 +242,10 @@ ParseNode *Expr(istream& in) {
     if( op != PLUS && op != MINUS ) {
         PutBackToken(op);
         return t1;
+    } else if (op == RSQ ){
+        PutBackToken(op);
+        return t1;
     }
-    
     ParseNode *t2 = Expr(in);
     
     if( t2 == 0 ) {
@@ -285,7 +285,7 @@ ParseNode *Primary(istream& in) {
         t1 = new Fconst(stof(tt1.getLexeme()));
     }else if(tt1 == STRING){
         t1 = new Sconst(tt1.getLexeme());
-    }else if(tt1 == LBR){
+    }else if(tt1 == LBR || tt1 == ID){
         PutBackToken(tt1);
         t1 = Poly(in);
         
@@ -297,6 +297,7 @@ ParseNode *Primary(istream& in) {
             return 0;
         }
     }
+    
     return t1;
 }
 
@@ -330,14 +331,26 @@ ParseNode *Poly(istream& in) {
     } else if (tk == LSQ){
         PutBackToken(tk);
         return EvalAt(in);
+    } else if (tk == ID){
+        Token tk2 = GetToken(in);
+        if(tk2 == LSQ){
+            PutBackToken(tk2);
+            return new EvaluateAt(new Ident(tk.getLexeme()), EvalAt(in));
+        }else if(tk2 == RSQ){
+            PutBackToken(tk2);
+            
+        }
+        
+        return new Ident(tk.getLexeme());
+    
     }
     return 0;
 }
 ParseNode *GetOneCoeff(Token& t){
     if( t == ICONST ) {
-        return new Iconst(std::stoi(t.getLexeme()));
+        return new Iconst(stoi(t.getLexeme()));
     } else if( t == FCONST ) {
-        return new Fconst(std::stof(t.getLexeme()));
+        return new Fconst(stof(t.getLexeme()));
     }
     return 0;
 }
@@ -385,9 +398,14 @@ ParseNode *EvalAt(istream& in) {
     if(tk == SC){
         PutBackToken(tk);
         return 0;
-    } else if(tk == LSQ){
+    } else if (tk == RSQ){
+        error("WTF");
+        return 0;
+    }else if(tk == LSQ){
         ParseNode *n = Expr(in);
         Token tk2 = GetToken(in);
+        
+
         if(tk2 != RSQ){
             error("Square braces don't match");
             return 0;
