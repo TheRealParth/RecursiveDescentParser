@@ -19,11 +19,11 @@ map<string,bool> IdentifierMap;
 extern int currentLine;
 static stack<Token *> tokenQueue = stack<Token *>();
 
-Token GetToken(istream& in) {
+Token *GetToken(istream& in) {
     if(tokenQueue.size()> 0){
         Token *n = tokenQueue.top();
         tokenQueue.pop();
-        return *n;
+        return n;
     } else {
         return getToken(in);
     }
@@ -46,7 +46,7 @@ void PutBackToken(Token& t) {
     tokenQueue.push(&t);
 }
 
-Token getToken(istream& in){
+Token *getToken(istream& in){
     enum State { START, INID, INSTRING, INICONST, INFCONST, INCOMMENT};
 //    cout << "\nCURR LINE: " << currentLine;
     State lexstate = START;
@@ -78,28 +78,28 @@ Token getToken(istream& in){
                     lexeme += ch;
                     continue;
                 } else if(ch == ';'){
-                    return Token(SC, ";");
+                    return new Token(SC, ";");
                 } else if(ch == '+'){
-                    return Token(PLUS, "+");
+                    return new Token(PLUS, "+");
                 } else if(ch == '*'){
-                    return Token(STAR, "*");
+                    return new Token(STAR, "*");
                 } else if(ch == '['){
-                    return Token(LSQ, "[");
+                    return new Token(LSQ, "[");
                 } else if(ch == ']'){
-                    return Token(RSQ, "]");
+                    return new Token(RSQ, "]");
                 } else if(ch == '('){
-                    return Token(LPAREN, "(");
+                    return new Token(LPAREN, "(");
                 } else if(ch == ')'){
-                    return Token(RPAREN, ")");
+                    return new Token(RPAREN, ")");
                 } else if( ch == '#' ) {
                     lexstate = INCOMMENT;
                     continue;
                 } else if( ch == '{' ) {
-                    return Token(LBR, "{");
+                    return new Token(LBR, "{");
                 } else if( ch == '}' ) {
-                    return Token(RBR, "}");
+                    return new Token(RBR, "}");
                 } else if (ch == ','){
-                    return Token(COMMA, ",");
+                    return new Token(COMMA, ",");
                 } else if( ch == '"' ) {
                     lexstate = INSTRING;
                     break;
@@ -108,10 +108,10 @@ Token getToken(istream& in){
                     if( isdigit(in.peek()) ) {
                         lexstate = INICONST;
                         break;
-                    } else return Token(MINUS, "-");
+                    } else return new Token(MINUS, "-");
                 } else {
                     parseError("Error parsing lexeme " + lexeme);
-                    return Token(ERR,lexeme);
+                    return new Token(ERR,lexeme);
                 }
                 break;
                 
@@ -119,22 +119,22 @@ Token getToken(istream& in){
                 if( !isalnum(ch) ) {
                     in.putback(ch);
                     if(lexeme == "set"){
-                        return Token(SET, lexeme);
+                        return new Token(SET, lexeme);
                     } else if (lexeme == "print"){
-                        return Token(PRINT, lexeme);
+                        return new Token(PRINT, lexeme);
                     } else
-                        return Token(ID, lexeme);
+                        return new Token(ID, lexeme);
                 }
                 lexeme += ch;
                 break;
                 
             case INSTRING:
                 if( ch == '"' ) {
-                    return Token(STRING, lexeme);
+                    return new Token(STRING, lexeme);
                 }
                 else if( ch == '\n' ) {
                     parseError("string must be in one line.");
-                    return Token(ERR, lexeme);
+                    return new Token(ERR, lexeme);
                 }
                 lexeme += ch;
                 break;
@@ -150,12 +150,12 @@ Token getToken(istream& in){
                         continue;
                     } else {
                         parseError("Invalid float.");
-                        return Token(ERR, lexeme);
+                        return new Token(ERR, lexeme);
                     }
                 } else {
                     in.putback(ch);
                     if(lexeme.length())
-                        return Token(ICONST, lexeme);
+                        return new Token(ICONST, lexeme);
                 }
                 break;
                 
@@ -166,7 +166,7 @@ Token getToken(istream& in){
                 } else {
                     in.putback(ch);
                     if(lexeme.length())
-                        return Token(FCONST, lexeme);
+                        return new Token(FCONST, lexeme);
                 }
                 break;
                 
@@ -182,12 +182,12 @@ Token getToken(istream& in){
     }
     // handle getting DONE or ERR when not in start state
     if(in.eof()){
-        if( lexstate == START ) return Token(DONE, "Done");
-        if( lexstate == INSTRING) return Token(DONE, "Done");
-        if( lexstate == INCOMMENT) return Token(DONE, "Done");
+        if( lexstate == START ) return new Token(DONE, "Done");
+        if( lexstate == INSTRING) return new Token(DONE, "Done");
+        if( lexstate == INCOMMENT) return new Token(DONE, "Done");
     }
     
-    return Token(ERR, lexeme);
+    return new Token(ERR, lexeme);
 }
 
 
@@ -203,10 +203,10 @@ ParseNode *Prog(istream& in) {
 
 // Stmt := Set ID Expr SC | PRINT Expr SC
 ParseNode *Stmt(istream& in) {
-    Token cmd = GetToken(in);
-    if( cmd == SET ) {
-        Token idTok = GetToken(in);
-        if( idTok != ID ) {
+    Token *cmd = GetToken(in);
+    if( *cmd == SET ) {
+        Token *idTok = GetToken(in);
+        if( *idTok != ID ) {
             parseError("Identifier required after set");
             return 0;
         }
@@ -215,20 +215,20 @@ ParseNode *Stmt(istream& in) {
             parseError("expression required after id in set");
             return 0;
         }
-        if( GetToken(in) != SC ) {
+        if( *GetToken(in) != SC ) {
             parseError("semicolon required");
             return 0;
         }
         
-        return new SetStatement(idTok.getLexeme(), exp);
+        return new SetStatement(idTok->getLexeme(), exp);
     }
-    else if( cmd == PRINT ) {
+    else if( *cmd == PRINT ) {
         ParseNode *exp = Expr(in);
         if( exp == 0 ) {
             parseError("expression required after id in print");
             return 0;
         }
-        if( GetToken(in) != SC ) {
+        if( *GetToken(in) != SC ) {
             parseError("semicolon required");
             return 0;
         }
@@ -245,9 +245,9 @@ ParseNode *Expr(istream& in) {
     if( t1 == 0 ) return 0;
     
     
-    Token op = GetToken(in);
-    if( op != PLUS && op != MINUS ) {
-        PutBackToken(op);
+    Token *op = GetToken(in);
+    if( *op != PLUS && *op != MINUS ) {
+        PutBackToken(*op);
         return t1;
     }
     ParseNode *t2 = Expr(in);
@@ -258,7 +258,7 @@ ParseNode *Expr(istream& in) {
     }
     
     // combine t1 and t2 together
-    if( op == PLUS )
+    if( *op == PLUS )
         t1 = new PlusOp(t1, t2);
     else
         t1 = new MinusOp(t1, t2);
@@ -269,34 +269,34 @@ ParseNode *Expr(istream& in) {
 // Term := Primary { * Primary }
 ParseNode *Term(istream& in) {
     ParseNode *p = Primary(in);
-    Token j = GetToken(in);
-    if(j == STAR){
+    Token *j = GetToken(in);
+    if(*j == STAR){
         return new TimesOp(p, Term(in));
     }
-    PutBackToken(j);
+    PutBackToken(*j);
     return p;
 }
 
 // Primary :=  ICONST | FCONST | STRING | ( Expr ) | Poly
 ParseNode *Primary(istream& in) {
     ParseNode *t1 = 0;
-    Token tt1 = GetToken(in);
-    Token tt2;
+    Token *tt1 = GetToken(in);
+    Token *tt2;
     
-    if(tt1 == ICONST){
-        t1 = new Iconst(stoi(tt1.getLexeme()));
-    }else if(tt1 == FCONST){
-        t1 = new Fconst(stof(tt1.getLexeme()));
-    }else if(tt1 == STRING){
-        t1 = new Sconst(tt1.getLexeme());
-    }else if(tt1 == LBR || tt1 == ID){
-        PutBackToken(tt1);
+    if(*tt1 == ICONST){
+        t1 = new Iconst(stoi(tt1->getLexeme()));
+    }else if(*tt1 == FCONST){
+        t1 = new Fconst(stof(tt1->getLexeme()));
+    }else if(*tt1 == STRING){
+        t1 = new Sconst(tt1->getLexeme());
+    }else if(*tt1 == LBR || *tt1 == ID){
+        PutBackToken(*tt1);
         t1 = Poly(in);
         
-    }else if(tt1 == LPAREN){
+    }else if(*tt1 == LPAREN){
         t1 = Expr(in);
         tt2 = GetToken(in);
-        if(tt2 != RPAREN){
+        if(*tt2 != RPAREN){
             parseError("Parenthesis don't match");
             return 0;
         }
@@ -308,22 +308,22 @@ ParseNode *Primary(istream& in) {
 // Poly := LCURLY Coeffs RCURLY { EvalAt } | ID { EvalAt }
 ParseNode *Poly(istream& in) {
     // note EvalAt is optional
-    Token tk = GetToken(in);
-    if(tk == LBR){
+    Token *tk = GetToken(in);
+    if(*tk == LBR){
         ParseNode *coeffs = 0;
         coeffs = Coeffs(in);
-        Token tk2 = GetToken(in);
+        Token *tk2 = GetToken(in);
         if(coeffs == 0){
             parseError("No coefficients were specified between brackets");
             return 0;
         }
-        if(tk2 == RBR){
-            Token tk2 = GetToken(in);
-            if(tk2 == LSQ){
-                PutBackToken(tk2);
+        if(*tk2 == RBR){
+            Token *tk2 = GetToken(in);
+            if(*tk2 == LSQ){
+                PutBackToken(*tk2);
                 return new EvaluateAt(coeffs, EvalAt(in));
             } else {
-                PutBackToken(tk2);
+                PutBackToken(*tk2);
                 return coeffs;
             }
             return 0;
@@ -332,19 +332,19 @@ ParseNode *Poly(istream& in) {
         
         return 0;
         
-    } else if (tk == LSQ){
-        PutBackToken(tk);
+    } else if (*tk == LSQ){
+        PutBackToken(*tk);
         return EvalAt(in);
-    } else if (tk == ID){
-        Token tk2 = GetToken(in);
-        if(tk2 == LSQ){
-            PutBackToken(tk2);
-            return new EvaluateAt(new Ident(tk.getLexeme()), EvalAt(in));
-        }else if(tk2 == RSQ){
-            PutBackToken(tk2);
+    } else if (*tk == ID){
+        Token *tk2 = GetToken(in);
+        if(*tk2 == LSQ){
+            PutBackToken(*tk2);
+            return new EvaluateAt(new Ident(tk->getLexeme()), EvalAt(in));
+        }else if(*tk2 == RSQ){
+            PutBackToken(*tk2);
         }
         
-        return new Ident(tk.getLexeme());
+        return new Ident(tk->getLexeme());
     
     }
     return 0;
@@ -362,13 +362,13 @@ ParseNode *GetOneCoeff(Token& t){
 ParseNode *Coeffs(istream& in) {
     vector<ParseNode *> coeffs;
     
-    Token t = GetToken(in);
+    Token *t = GetToken(in);
     
-    if (t == COMMA) {
+    if (*t == COMMA) {
         parseError("No value provided before comma");
         return 0;
     }
-    ParseNode *p = GetOneCoeff(t);
+    ParseNode *p = GetOneCoeff(*t);
     if( p == 0 )
         return 0;
     
@@ -377,14 +377,14 @@ ParseNode *Coeffs(istream& in) {
     while( true ) {
         t = GetToken(in);
         
-        if( t == COMMA ) {
+        if( *t == COMMA ) {
             
             continue;
-        } else if ( t == RBR){
-            PutBackToken(t);
+        } else if ( *t == RBR){
+            PutBackToken(*t);
             return new Coefficients(coeffs);
         } else {
-            p = GetOneCoeff(t);
+            p = GetOneCoeff(*t);
             if( p == 0 ) {
                 parseError("Missing coefficient after comma");
                 return 0;
@@ -397,16 +397,16 @@ ParseNode *Coeffs(istream& in) {
 
 // To evauluate the polynomials
 ParseNode *EvalAt(istream& in) {
-    Token tk = GetToken(in);
-    if(tk == SC){
-        PutBackToken(tk);
+    Token *tk = GetToken(in);
+    if(*tk == SC){
+        PutBackToken(*tk);
         return 0;
-    } else if(tk == LSQ){
+    } else if(*tk == LSQ){
         ParseNode *n = Expr(in);
-        Token tk2 = GetToken(in);
+        Token *tk2 = GetToken(in);
         
 
-        if(tk2 != RSQ){
+        if(*tk2 != RSQ){
             parseError("Square braces don't match");
             return 0;
         }

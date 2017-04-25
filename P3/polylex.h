@@ -60,7 +60,7 @@ public:
 	bool operator!=(const TokenTypes& tt) { return t != tt; }
 };
 
-extern Token getToken(std::istream& source);
+extern Token *getToken(std::istream& source);
 
 
 
