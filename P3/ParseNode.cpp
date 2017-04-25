@@ -17,6 +17,7 @@ using namespace std;
 
 map<string,bool> IdentifierMap;
 extern int currentLine;
+bool firstStatement = true;
 static stack<Token *> tokenQueue = stack<Token *>();
 
 Token *GetToken(istream& in) {
@@ -195,9 +196,12 @@ Token *getToken(istream& in){
 ParseNode *Prog(istream& in) {
     ParseNode *stmt = Stmt(in);
     
-    if( stmt != 0 )
+    if( stmt != 0 ){
         return new StatementList(stmt, Prog(in));
-//    error("Invalid Statement");
+    } else if(currentLine == 0 && (firstStatement)) {
+        firstStatement = false;
+        parseError("Invalid Statement");
+    }
     return 0;
 }
 
