@@ -39,29 +39,7 @@ main(int argc, char *argv[])
     }
     
     istream& in = use_stdin ? cin : file;
-    
-//        Token tok;
-//        int allTokens = 0;
-//    
-//        map<TokenTypes,int> tokenCounts;
-//        map<string,bool> identSeen;
-//    
-//        while( (tok = getToken(in)) != DONE && tok != ERR ) {
-//            allTokens++;
-//            tokenCounts[ tok.getType() ]++;
-//            cout << tok.getLexeme() << endl;
-//            if( tok == ID ) {
-//                identSeen[ tok.getLexeme() ] = true;
-//            }
-//    
-//        }
-//        cout << tok.getLexeme() << endl;
-//        if( tok == ERR ) {
-//    
-//            cout << "Error on line " << currentLine+1 << " (" << tok.getLexeme() << ")" << endl;
-//            return 1;
-//        }
-//    
+
     ParseNode *program = Prog(in);
     
     if( program == 0 || globalErrorCount > 0 ) {

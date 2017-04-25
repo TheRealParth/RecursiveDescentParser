@@ -21,7 +21,7 @@ using std::map;
 #include "polylex.h"
 
 extern int globalErrorCount;
-
+extern int currentLine;
 
 // objects in the language have one of these types
 enum Type {
@@ -54,11 +54,14 @@ public:
 class ParseNode {
 	ParseNode	*left;
 	ParseNode	*right;
+    int whichLine;
 public:
-	ParseNode(ParseNode *left = 0, ParseNode *right = 0) : left(left), right(right) {}
+	ParseNode(ParseNode *left = 0, ParseNode *right = 0) : left(left), right(right) {
+        whichLine = currentLine;
+    }
 	virtual ~ParseNode() {}
 	virtual Type GetType() { return UNKNOWNVAL; }
-    
+    virtual int getLine() { return whichLine; }
     virtual void RunStaticChecks(map<string,bool>& idMap) {
         if( left )
             left->RunStaticChecks(idMap);
@@ -72,7 +75,6 @@ public:
     ParseNode *leftNode() {
         return left;
     };
-
     
 };
 extern void runtimeError(ParseNode* i, string s);
@@ -168,6 +170,7 @@ public:
     void RunStaticChecks(map<string,bool>& idMap) {
         if( idMap[id] == false ) {
             runtimeError(this, "identifier " + id + " used before set");
+            ++globalErrorCount;
         }
     }
     Type GetType() { return UNKNOWNVAL; }; // not known until run time!
@@ -183,6 +186,5 @@ extern ParseNode *Primary(istream& in);
 extern ParseNode *Poly(istream& in);
 extern ParseNode *Coeffs(istream& in);
 extern ParseNode *EvalAt(istream& in);
-
 
 #endif /* PARSENODE_H_ */

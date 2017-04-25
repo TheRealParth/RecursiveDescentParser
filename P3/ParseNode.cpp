@@ -50,7 +50,7 @@ Token getToken(istream& in){
     enum State { START, INID, INSTRING, INICONST, INFCONST, INCOMMENT};
     
     State lexstate = START;
-    std::string lexeme = "";
+    string lexeme = "";
     
     while(true){
         char ch = in.get();
@@ -359,7 +359,7 @@ ParseNode *GetOneCoeff(Token& t){
 // notice we don't need a separate rule for ICONST | FCONST
 // this rule checks for a list of length at least one
 ParseNode *Coeffs(istream& in) {
-    std::vector<ParseNode *> coeffs;
+    vector<ParseNode *> coeffs;
     
     Token t = GetToken(in);
     
