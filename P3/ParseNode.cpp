@@ -16,14 +16,14 @@
 using namespace std;
 
 map<string,bool> IdentifierMap;
-
-static stack<Token> tokenQueue = stack<Token>();
+extern int currentLine;
+static stack<Token *> tokenQueue = stack<Token *>();
 
 Token GetToken(istream& in) {
     if(tokenQueue.size()> 0){
-        Token &n = tokenQueue.top();
+        Token *n = tokenQueue.top();
         tokenQueue.pop();
-        return n;
+        return *n;
     } else {
         return getToken(in);
     }
@@ -43,12 +43,12 @@ void runtimeError(ParseNode* i, string s) {
 
 //function to "putback" tokens
 void PutBackToken(Token& t) {
-    tokenQueue.push(t);
+    tokenQueue.push(&t);
 }
 
 Token getToken(istream& in){
     enum State { START, INID, INSTRING, INICONST, INFCONST, INCOMMENT};
-    
+//    cout << "\nCURR LINE: " << currentLine;
     State lexstate = START;
     string lexeme = "";
     
@@ -177,6 +177,7 @@ Token getToken(istream& in){
                 }
                 continue;
                 break;
+                
         }
     }
     // handle getting DONE or ERR when not in start state
