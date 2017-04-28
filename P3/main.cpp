@@ -15,6 +15,7 @@ using namespace std;
 
 int currentLine = 0;
 int globalErrorCount = 0;
+map<string,bool> IdentifierMap;
 
 int
 main(int argc, char *argv[])

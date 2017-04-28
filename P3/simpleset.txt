@@ -1,0 +1,11 @@
+set i 42;
+set f 6.02;
+set s "hello";
+
+print i;
+print f;
+print s;
+
+print "==========";
+print 42;
+print 400;

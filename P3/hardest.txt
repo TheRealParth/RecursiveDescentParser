@@ -1,0 +1,9 @@
+set x 5;
+set y 2;
+
+print x+y;
+set z x*y;
+
+print z;
+
+print 2*2*2*2*z;

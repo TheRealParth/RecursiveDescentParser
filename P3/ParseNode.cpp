@@ -14,8 +14,7 @@
 #include "polylex.h"
 
 using namespace std;
-
-map<string,bool> IdentifierMap;
+extern map<string,bool> IdentifierMap;
 extern int currentLine;
 bool firstStatement = true;
 static stack<Token *> tokenQueue = stack<Token *>();
@@ -49,7 +48,7 @@ void PutBackToken(Token& t) {
 
 Token *getToken(istream& in){
     enum State { START, INID, INSTRING, INICONST, INFCONST, INCOMMENT};
-//    cout << "\nCURR LINE: " << currentLine;
+
     State lexstate = START;
     string lexeme = "";
     
@@ -232,6 +231,7 @@ ParseNode *Stmt(istream& in) {
             parseError("expression required after id in print");
             return 0;
         }
+        
         if( *GetToken(in) != SC ) {
             parseError("semicolon required");
             return 0;
@@ -245,7 +245,6 @@ ParseNode *Stmt(istream& in) {
 // Expr := Term { (+|-) Expr }
 ParseNode *Expr(istream& in) {
     ParseNode *t1 = Term(in);
-    
     if( t1 == 0 ) return 0;
     
     
@@ -296,7 +295,6 @@ ParseNode *Primary(istream& in) {
     }else if(*tt1 == LBR || *tt1 == ID){
         PutBackToken(*tt1);
         t1 = Poly(in);
-        
     }else if(*tt1 == LPAREN){
         t1 = Expr(in);
         tt2 = GetToken(in);
@@ -304,6 +302,11 @@ ParseNode *Primary(istream& in) {
             parseError("Parenthesis don't match");
             return 0;
         }
+    }else if(*tt1 == ID){
+        t1 = new Ident(tt1->getLexeme());
+    } else {
+        t1 = 0;
+        PutBackToken(*tt1);
     }
     
     return t1;
@@ -347,7 +350,7 @@ ParseNode *Poly(istream& in) {
         }else if(*tk2 == RSQ){
             PutBackToken(*tk2);
         }
-        
+            PutBackToken(*tk2);
         return new Ident(tk->getLexeme());
     
     }
