@@ -32,6 +32,7 @@ enum Type {
 	INTEGERVAL,
 	FLOATVAL,
 	STRINGVAL,
+    POLYVAL,
 	UNKNOWNVAL,
 };
 
@@ -42,26 +43,28 @@ class Value {
 	float f;
 	string s;
 	Type	t;
+    vector<Value *> p;
 public:
 	Value(int i) : i(i), f(0), t(INTEGERVAL) {}
 	Value(float f) : i(0), f(f), t(FLOATVAL) {}
 	Value(string s) : i(0), f(0), s(s), t(STRINGVAL) {}
+    Value(vector<Value *> p) : i(0), f(0), p(p), t(POLYVAL) {}
     Value() : t(UNKNOWNVAL) {}
 
     Value operator+(const Value& op) const {
         if( t == INTEGERVAL ) {
             if( op.t == INTEGERVAL )
-                return Value( i + op.i );
+                return Value(i + op.i);
             else if( op.t == FLOATVAL )
-                return Value( i + op.f );
+                return Value((float)i + op.f);
         }else if( t == FLOATVAL ) {
             if( op.t == INTEGERVAL )
-                return Value( f + op.i );
+                return Value(f + (float)op.i);
             else if( op.t == FLOATVAL )
-                return Value( f + op.f );
+                return Value(f + op.f);
         }else if( t == STRINGVAL ) {
             if( op.t == STRINGVAL )
-                return Value( s + op.s );
+                return Value(s + op.s);
         }
         return Value();
     }
@@ -100,7 +103,7 @@ public:
             if(op.t == FLOATVAL){
                 return Value(f * op.f);
             } else if (op.t == INTEGERVAL){
-                return Value(f * (int)op.i);
+                return Value(f * (float)op.i);
             }
         } else if( t == STRINGVAL){
             if(op.t == INTEGERVAL){
@@ -119,17 +122,20 @@ public:
     float GetFloatValue();
     string GetStringValue();
     
-    friend ostream& operator<<(ostream& os, const Value& t) {
-        if(t.t == INTEGERVAL){
-            os << t.i;
-        }else if(t.t == STRINGVAL){
-            os << t.s;
-        } else if (t.t == FLOATVAL){
-            os << t.f;
+    
+    friend ostream &operator<<( ostream &output, const Value &v ) {
+        if(v.t == INTEGERVAL){
+            output << v.i << endl;
+        } else if(v.t == STRINGVAL){
+            output << v.s << endl;
+        }else if(v.t == FLOATVAL){
+            output << v.f << endl;
+        }else if(v.t == POLYVAL){
+            //DO THINGS HERE
+            return output;
         }
-        return os;
+        return output;
     }
-
 
 };
 
@@ -145,7 +151,7 @@ public:
         whichLine = currentLine;
     }
 	virtual ~ParseNode() {}
-	virtual Type GetType() { return UNKNOWNVAL; }
+//	virtual Type GetType() { return UNKNOWNVAL; }
     virtual int getLine() { return whichLine; }
     virtual void RunStaticChecks(map<string,bool>& idMap) {
         if( left )
@@ -185,13 +191,29 @@ public:
     {
         idMap[id] = true;
     }
+    Value Eval(map<string,Value>& symb) {
+        Value op1 = leftNode()->Eval(symb);
+        if( op1.GetType() == UNKNOWNVAL ) {
+            runtimeError(this, "Unknown val in set statement.");
+        }
+        symb[id] = op1;
+        return op1;
+    }
+    
 };
 
 // a PrintStatement represents the idea of printing the value of the Expr pointed to by the left node
 class PrintStatement : public ParseNode {
 public:
 	PrintStatement(ParseNode* exp) : ParseNode(exp) {}
-    
+    Value Eval(map<string,Value>& symb) {
+        Value op1 = leftNode()->Eval(symb);
+        if( op1.GetType() == UNKNOWNVAL ) {
+            runtimeError(this, "Unknown val in set statement.");
+        }
+        cout << op1;
+        return op1;
+    }
 };
 
 // represents adding
@@ -202,7 +224,6 @@ public:
         Value op1 = leftNode()->Eval(symb);
         Value op2 = rightNode()->Eval(symb);
         Value sum = op1 + op2;
-        cout << sum << endl;
         if( sum.GetType() == UNKNOWNVAL ) {
             runtimeError(this, "type mismatch in add");
         }

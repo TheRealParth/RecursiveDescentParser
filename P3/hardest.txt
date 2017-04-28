@@ -1,7 +1,6 @@
 set x 5;
 set y 2;
-set i {1, 2, 3, 4, 5};
-print i[3];
+
 print x+y;
 set z x*y;
 

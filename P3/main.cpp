@@ -52,7 +52,7 @@ main(int argc, char *argv[])
     }
     
     program->RunStaticChecks(*IdentifierMap);
-    
+    cout << program->Eval(*Symb);
 
     
     return 0;
