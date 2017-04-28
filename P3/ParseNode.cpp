@@ -14,10 +14,14 @@
 #include "polylex.h"
 
 using namespace std;
-extern map<string,bool> IdentifierMap;
+
 extern int currentLine;
 bool firstStatement = true;
+
 static stack<Token *> tokenQueue = stack<Token *>();
+
+extern map<string,bool> *IdentifierMap;
+extern map<string, Value> *Symb;
 
 Token *GetToken(istream& in) {
     if(tokenQueue.size()> 0){
@@ -422,3 +426,6 @@ ParseNode *EvalAt(istream& in) {
     
     return 0;
 }
+
+
+

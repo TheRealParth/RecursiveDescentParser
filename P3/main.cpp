@@ -9,13 +9,16 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+
 using namespace std;
 
 #include "ParseNode.h"
 
 int currentLine = 0;
 int globalErrorCount = 0;
-map<string,bool> IdentifierMap;
+
+map<string, bool > *IdentifierMap = new map<string, bool>();
+map<string, Value> *Symb = new map<string, Value>();
 
 int
 main(int argc, char *argv[])
@@ -48,10 +51,8 @@ main(int argc, char *argv[])
         return 1;
     }
     
-//    ParseNode *right = program->rightNode();
-//    cout << "\n" << right << "\n";
-//    right = program->rightNode();
-//    cout << "\n" << right;
+    program->RunStaticChecks(*IdentifierMap);
+    
 
     
     return 0;

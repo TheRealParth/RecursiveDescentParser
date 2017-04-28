@@ -30,7 +30,7 @@
 		B208649B1EA44F0200B1BD9A /* polylex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = polylex.h; sourceTree = "<group>"; };
 		B20864A11EA4513D00B1BD9A /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B20864AE1EA4F09700B1BD9A /* hardest.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = hardest.txt; sourceTree = "<group>"; };
-		B20864AF1EA4F09700B1BD9A /* prog2.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prog2.txt; sourceTree = "<group>"; };
+		B20864AF1EA4F09700B1BD9A /* si.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = si.txt; sourceTree = "<group>"; };
 		B20864B01EA4F09700B1BD9A /* prog3.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prog3.txt; sourceTree = "<group>"; };
 		B20864B11EA4F09700B1BD9A /* bad4.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bad4.txt; sourceTree = "<group>"; };
 		B20864B21EA4F09700B1BD9A /* bad3.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bad3.txt; sourceTree = "<group>"; };
@@ -85,7 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				B20864AE1EA4F09700B1BD9A /* hardest.txt */,
-				B20864AF1EA4F09700B1BD9A /* prog2.txt */,
+				B20864AF1EA4F09700B1BD9A /* si.txt */,
 				B20864B01EA4F09700B1BD9A /* prog3.txt */,
 				B20864B11EA4F09700B1BD9A /* bad4.txt */,
 				B20864B21EA4F09700B1BD9A /* bad3.txt */,
