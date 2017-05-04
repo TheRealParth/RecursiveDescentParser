@@ -58,6 +58,19 @@ public:
                 return Value(i + op.i);
             else if( op.t == FLOATVAL )
                 return Value((float)i + op.f);
+            else if(op.t == POLYVAL){
+                vector<Value *> *p2 = new vector<Value *>();
+                for(int i = 0; i < op.p.size(); i++){
+                    if(i == op.p.size()-1){
+                        p2->push_back(new Value((*op.p[i]) + this->i));
+                    } else {
+                        p2->push_back(op.p[i]);
+                    }
+                }
+                
+                return Value(*p2);
+
+            }
         }else if( t == FLOATVAL ) {
             if( op.t == INTEGERVAL )
                 return Value(f + (float)op.i);
@@ -67,25 +80,56 @@ public:
             if( op.t == STRINGVAL )
                 return Value(s + op.s);
         }else if (t == POLYVAL){
+            vector<Value *> *p2;
             if( op.t == POLYVAL){
-                vector<Value *> *p2 =  new vector<Value *>();
-                for(int i = (int)p.size(); i > 0; i--){
-                    if(i <= op.p.size() && i <= p.size()){
-                        p2->push_back(new Value((*p[i]) + (*op.p[i])));
-                    } else{
-                        if(p.size() < i){
-                            p2->push_back(new Value(*op.p[i]));
-                        } else {
-                            p2->push_back(new Value(*p[i]));
+                p2 =  new vector<Value *>();
+                int j, s;
+                if(p.size() < op.p.size()){
+                    j = (int)(op.p.size() - p.size());
+                    s = j;
+                    for(int i = 0; i < op.p.size(); i++){
+                        if(j){
+                            p2->push_back(op.p[i]);
+                            j--;
+                        }else {
+                            p2->push_back(new Value((*p[i-s]) + (*op.p[i])));
                         }
+                        
+                    }
+                } else {
+                    j = (int)(p.size() - op.p.size());
+                    s = j;
+                    
+                    for(int i = 0; i < p.size(); i++){
+                        if(j){
+                            p2->push_back(p[i]);
+                        j--;
+                        }else {
+                           
+                            p2->push_back(new Value((*p[i]) + (*op.p[i-s])));  
+                        }
+                    }
+                }
+                return Value(*p2);
+            } else if (op.t == INTEGERVAL){
+                p2 = new vector<Value *>();
+                for(int i = 0; i < p.size(); i++){
+                    if(i == p.size()-1){
+                        p2->push_back(new Value((*p[i]) + op.i));
+                    } else {
+                        p2->push_back(p[i]);
                     }
                 }
                 
                 return Value(*p2);
-            } else if (op.t == INTEGERVAL){
-                vector<Value *> *p2 = new vector<Value *>();
-                for(int i = (int)p.size(); i > 0; i--){
-                    p2->push_back(new Value((*p[i]) + op.i));
+            } else if (op.t == FLOATVAL){
+                p2 = new vector<Value *>();
+                for(int i = 0; i < p.size(); i++){
+                    if(i == p.size()-1){
+                        p2->push_back(new Value((*p[i]) + op));
+                    } else {
+                        p2->push_back(p[i]);
+                    }
                 }
                 
                 return Value(*p2);
@@ -100,11 +144,77 @@ public:
                 return Value(i - op.i);
             else if (op.t == FLOATVAL)
                 return Value((float)i - op.f);
+            else if(op.t == POLYVAL){
+                vector<Value *> *p2 = new vector<Value *>();
+                for(int i = 0; i < op.p.size(); i++){
+                    if(i == op.p.size()-1){
+                        p2->push_back(new Value((this->i - op.p[i]->i)));
+                    } else {
+                        p2->push_back(new Value(op.p[i]->i * -1));
+                    }
+                }
+                return Value(*p2);
+            }
         } else if( t == FLOATVAL ){
             if(op.t == FLOATVAL)
                 return Value(f - op.f);
             else if(op.t == INTEGERVAL)
                 return Value(f - (float)op.i);
+        } else if (t == POLYVAL){
+            vector<Value *> *p2;
+            if( op.t == POLYVAL){
+                p2 =  new vector<Value *>();
+                int j, s;
+                if(p.size() < op.p.size()){
+                    j = (int)(op.p.size() - p.size());
+                    s = j;
+                    for(int i = 0; i < op.p.size(); i++){
+                        if(j){
+                            p2->push_back(new Value(op.p[i]->i * -1));
+                            j--;
+                        }else {
+                            p2->push_back(new Value((*p[i-s]) - (*op.p[i])));
+                        }
+                        
+                    }
+                } else {
+                    j = (int)(p.size() - op.p.size());
+                    s = j;
+                    
+                    for(int i = 0; i < p.size(); i++){
+                        if(j){
+                            p2->push_back(p[i]);
+                            j--;
+                        }else {
+                            
+                            p2->push_back(new Value((*p[i]) - (*op.p[i-s])));
+                        }
+                    }
+                }
+                return Value(*p2);
+            } else if (op.t == INTEGERVAL){
+                p2 = new vector<Value *>();
+                for(int i = 0; i < p.size(); i++){
+                    if(i == p.size()-1){
+                        p2->push_back(new Value((*p[i])-op));
+                    } else {
+                        p2->push_back(p[i]);
+                    }
+                }
+                
+                return Value(*p2);
+            } else if (op.t == FLOATVAL){
+                p2 = new vector<Value *>();
+                for(int i = 0; i < p.size(); i++){
+                    if(i == p.size()-1){
+                        p2->push_back(new Value((*p[i])-op));
+                    } else {
+                        p2->push_back(new Value(p[i]->i));
+                    }
+                }
+                
+                return Value(*p2);
+            }
         }
         return Value();
     }
@@ -160,7 +270,11 @@ public:
             
             output << "{ ";
             for(int i = 0; i < v.p.size(); i++){
-                output << (*v.p[i]).GetIntValue();
+                if(v.p[i]->GetType() == INTEGERVAL){
+                    output << (*v.p[i]).GetIntValue();
+                } else if(v.p[i]->GetType() == FLOATVAL){
+                    output << (*v.p[i]).GetFloatValue();
+                }
                 if(i != v.p.size()-1){
                     output << ", ";
                 }
@@ -169,7 +283,9 @@ public:
         }
         return output;
     }
-
+    Value biggerFirst(vector<Value *> &big, vector<Value *> &small){
+        return Value();
+    }
 };
 
 extern map<string, Value> *Symb;
