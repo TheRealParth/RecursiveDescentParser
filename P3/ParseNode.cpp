@@ -40,7 +40,7 @@ void parseError(string s) {
     ++globalErrorCount;
 }
 //For Runtime Errors
-void runtimeError(ParseNode* i, string s) {
+void runtimeError( string s) {
     cout << "RUNTIME ERROR: " << currentLine << " " << s << endl;
     ++globalErrorCount;
 }

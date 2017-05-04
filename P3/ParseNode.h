@@ -26,7 +26,7 @@ using std::ostream;
 extern int globalErrorCount;
 extern int currentLine;
 extern map<string,bool> *IdentifierMap;
-
+extern void runtimeError(string s);
 
 // objects in the language have one of these types
 enum Type {
@@ -66,6 +66,30 @@ public:
         }else if( t == STRINGVAL ) {
             if( op.t == STRINGVAL )
                 return Value(s + op.s);
+        }else if (t == POLYVAL){
+            if( op.t == POLYVAL){
+                vector<Value *> *p2 =  new vector<Value *>();
+                for(int i = 0; i < p.size(); i++){
+                    if(i <= op.p.size() && i <= p.size()){
+                        p2->push_back(new Value((*p[i]) + (*op.p[i])));
+                    } else{
+                        if(p.size() < i){
+                            p2->push_back(new Value(*op.p[i]));
+                        } else {
+                            p2->push_back(new Value(*p[i]));
+                        }
+                    }
+                }
+                
+                return Value(*p2);
+            } else if (op.t == INTEGERVAL){
+                vector<Value *> *p2 = new vector<Value *>();
+                for(int i = 0; i < p.size(); i++){
+                    p2->push_back(new Value((*p[i]) + op.i));
+                }
+                
+                return Value(*p2);
+            }
         }
         return Value();
     }
@@ -117,6 +141,7 @@ public:
         }
         return Value();
     }
+    
     
     Type GetType() { return t; }
     int GetIntValue(){return i;}
@@ -182,7 +207,7 @@ public:
     };
     virtual Type GetType(){return UNKNOWNVAL;}
 };
-extern void runtimeError(ParseNode* i, string s);
+extern void runtimeError(string s);
 
 // a list of statements is represented by a statement to the left, and a list of statments to the right
 class StatementList : public ParseNode {
@@ -202,7 +227,7 @@ public:
     Value Eval(map<string,Value>& symb) {
         Value op1 = leftNode()->Eval(symb);
         if( op1.GetType() == UNKNOWNVAL ) {
-            runtimeError(this, "Unknown val in set statement.");
+            runtimeError("Unknown val in set statement.");
         }
         symb[id] = op1;
         return op1;
@@ -217,7 +242,7 @@ public:
     Value Eval(map<string,Value>& symb) {
         Value op1 = leftNode()->Eval(symb);
         if( op1.GetType() == UNKNOWNVAL ) {
-            runtimeError(this, "Unknown val in set statement.");
+            runtimeError("Unknown val in set statement.");
         }
         cout << op1;
         return op1;
@@ -233,7 +258,7 @@ public:
         Value op2 = rightNode()->Eval(symb);
         Value sum = op1 + op2;
         if( sum.GetType() == UNKNOWNVAL ) {
-            runtimeError(this, "type mismatch in add");
+            runtimeError("type mismatch in add");
         }
         return sum;
     }
@@ -248,7 +273,7 @@ public:
         Value op2 = rightNode()->Eval(symb);
         Value sum = op1 - op2;
         if( sum.GetType() == UNKNOWNVAL ) {
-            runtimeError(this, "type mismatch in subtract");
+            runtimeError("type mismatch in subtract");
         }
         return sum;
     }
@@ -263,7 +288,7 @@ public:
         Value op2 = rightNode()->Eval(symb);
         Value product = op1 * op2;
         if( product.GetType() == UNKNOWNVAL ) {
-            runtimeError(this, "type mismatch in multiply");
+            runtimeError("type mismatch in multiply");
         }
         return product;
     }
@@ -346,7 +371,7 @@ public:
 	Ident(string id) : id(id), t(UNKNOWNVAL), ParseNode() {}
     void RunStaticChecks(map<string,bool>& idMap) {
         if( idMap[id] == false ) {
-            runtimeError(this, "identifier " + id + " used before set");
+            runtimeError("identifier " + id + " used before set");
             ++globalErrorCount;
         }
     }
@@ -368,7 +393,12 @@ public:
         Value op2 = rightNode()->Eval(symb);
         
         if( op1.GetType() != POLYVAL ) {
-            runtimeError(this, "type mismatch in EvaluateAt");
+            runtimeError( "type mismatch in EvaluateAt");
+        }
+        
+        if(op2.GetType()!=FLOATVAL || op2.GetType()!=INTEGERVAL){
+            runtimeError( "type mismatch");
+            return Value();
         }
         
         vector<Value *> temp = op1.GetPolyValue();
