@@ -69,7 +69,7 @@ public:
         }else if (t == POLYVAL){
             if( op.t == POLYVAL){
                 vector<Value *> *p2 =  new vector<Value *>();
-                for(int i = 0; i < p.size(); i++){
+                for(int i = (int)p.size(); i > 0; i--){
                     if(i <= op.p.size() && i <= p.size()){
                         p2->push_back(new Value((*p[i]) + (*op.p[i])));
                     } else{
@@ -84,7 +84,7 @@ public:
                 return Value(*p2);
             } else if (op.t == INTEGERVAL){
                 vector<Value *> *p2 = new vector<Value *>();
-                for(int i = 0; i < p.size(); i++){
+                for(int i = (int)p.size(); i > 0; i--){
                     p2->push_back(new Value((*p[i]) + op.i));
                 }
                 
