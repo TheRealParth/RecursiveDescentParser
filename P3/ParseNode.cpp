@@ -21,7 +21,7 @@ bool firstStatement = true;
 static stack<Token *> tokenQueue = stack<Token *>();
 
 extern map<string,bool> *IdentifierMap;
-extern map<string, Value> *Symb;
+
 
 Token *GetToken(istream& in) {
     if(tokenQueue.size()> 0){

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <cmath>
 
 using std::istream;
 using std::cout;
@@ -108,7 +109,7 @@ public:
         } else if( t == STRINGVAL){
             if(op.t == INTEGERVAL){
                 string multistring = ""; // consider initializing with value of s
-                for(int i = 0; i < op.i; i ++){
+                for(unsigned i = 0; i < op.i; i ++){
                     multistring += s;
                 }
                 return Value(multistring);
@@ -118,10 +119,10 @@ public:
     }
     
     Type GetType() { return t; }
-    int GetIntValue();
-    float GetFloatValue();
-    string GetStringValue();
-    
+    int GetIntValue(){return i;}
+    float GetFloatValue(){return f;}
+    string GetStringValue(){return s;}
+    vector<Value *> GetPolyValue() {return p; }
     
     friend ostream &operator<<( ostream &output, const Value &v ) {
         if(v.t == INTEGERVAL){
@@ -131,8 +132,15 @@ public:
         }else if(v.t == FLOATVAL){
             output << v.f << endl;
         }else if(v.t == POLYVAL){
-            //DO THINGS HERE
-            return output;
+            
+            output << "{ ";
+            for(int i = 0; i < v.p.size(); i++){
+                output << (*v.p[i]).GetIntValue();
+                if(i != v.p.size()-1){
+                    output << ", ";
+                }
+            }
+            output << " }\n";
         }
         return output;
     }
@@ -172,7 +180,7 @@ public:
     ParseNode *leftNode() {
         return left;
     };
-    
+    virtual Type GetType(){return UNKNOWNVAL;}
 };
 extern void runtimeError(ParseNode* i, string s);
 
@@ -268,6 +276,25 @@ class Coefficients : public ParseNode {
 public:
     Coefficients(vector<ParseNode *> &coeff) : ParseNode(){
         coefficients = coeff;
+        
+        
+    }
+    
+    Value Eval(map<string,Value>& symb) {
+        vector<Value *> l =  vector<Value *>();
+        vector<ParseNode *>::iterator It;
+        int i =0;
+        ParseNode* thing;
+        for(It = coefficients.begin(); It != coefficients.end(); It++)
+        {
+            thing = *It;
+            
+            
+            l.push_back(new Value(thing->Eval(symb)));
+            
+            i++;
+        }
+        return Value(l);
     }
 };
 
@@ -340,11 +367,62 @@ public:
         Value op1 = leftNode()->Eval(symb);
         Value op2 = rightNode()->Eval(symb);
         
-        Value sum = op1 - op2;
-        if( sum.GetType() == UNKNOWNVAL ) {
-            runtimeError(this, "type mismatch in subtract");
+        if( op1.GetType() != POLYVAL ) {
+            runtimeError(this, "type mismatch in EvaluateAt");
         }
-        return sum;
+        
+        vector<Value *> temp = op1.GetPolyValue();
+        
+        bool isFloat = false;
+        if(op2.GetType() == FLOATVAL){
+            isFloat = true;
+        }
+        for(int i = 0; i < temp.size(); i++){
+            if(isFloat) break;
+            if(temp[i]->GetType() == FLOATVAL){
+                isFloat = true;
+            }
+        }
+        
+        
+        if(isFloat){
+            float j = (float) temp.size() - 1;
+            float val;
+            float val2;
+            float sum = 0.0;
+            for(int i = 0; i < temp.size(); i++){
+                
+                if(temp[i]->GetType()== FLOATVAL){
+                    val = temp[i]->GetFloatValue();
+                } else {
+                    val = (float) temp[i]->GetIntValue();
+                }
+                    
+                if(op2.GetType() == FLOATVAL){
+                    val2 = op2.GetFloatValue();
+                }else {
+                    val2 = (float) op2.GetIntValue();
+                }
+                sum += pow(val2, j) * val;
+                j--;
+            }
+            return Value(sum);
+        }else {
+            int j = (int) temp.size() - 1;
+            int val;
+            int val2;
+            int sum = 0;
+            for(int i = 0; i < temp.size(); i++){
+                val = temp[i]->GetIntValue();
+                val2 = op2.GetIntValue();
+                sum += pow(val2, j) * val;
+                j--;
+            }
+            return Value(sum);
+        }
+        
+        
+        return op1;
     }
 };
 

@@ -18,7 +18,7 @@ int currentLine = 0;
 int globalErrorCount = 0;
 
 map<string, bool > *IdentifierMap = new map<string, bool>();
-map<string, Value> *Symb = new map<string, Value>();
+map<string, Value> *symb = new map<string, Value>();
 
 int
 main(int argc, char *argv[])
@@ -52,8 +52,12 @@ main(int argc, char *argv[])
     }
     
     program->RunStaticChecks(*IdentifierMap);
-    cout << program->Eval(*Symb);
-
+    program->Eval(*symb);
+    
+    if( globalErrorCount > 0 ) {
+        cout << "Program failed!" << endl;
+        return 1;
+    }
     
     return 0;
 }
